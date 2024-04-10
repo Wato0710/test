@@ -49,6 +49,32 @@ public class NSB_Manager : CallbackReceiver
 			- false	- Expired, not able to authenticate Developer code with Neeuro Server
 			- true	- Valid, not expired
 
+		NSBM Init:
+
+			false: NSBM（SenzeBandモジュール）が初期化されていない状態です。
+			true: NSBMが初期化され、動作可能な状態です。"Ready"とも表現されています。
+		Scanning:
+
+			false: デバイスのスキャンが実行されていない状態です。
+			true: デバイスのスキャンが実行されており、デバイスを検出している状態です。"Not scanning"および"Scanning"とも表現されています。
+		Connection States:
+
+			0: デバイスが接続されていない状態です。
+			1: 接続が確立中の状態で、"Connecting"とも表現されています。
+			2: 接続が確立され、接続状態がDeviceStatusコールバックで更新された状態です。
+			3: 接続が確立し、ConnectionSucceedコールバックでSenzeBandのアドレスが返された状態です。
+			4: 接続が確立し、MCUID（SenzeBandのMCU ID）が受信された状態です。
+		iOSデバイスでは、0->1->3->4の順で接続が進行するようです。
+		Androidデバイスでは、0->1->2->3->4の順で接続が進行するようです。
+		EEG Started:
+
+			false: EEG（脳波）の受信が開始されていない状態です。
+			true: EEGの受信が開始されている状態です。
+		Authenticated:
+
+			false: 開発者コードがNeeuroサーバーと認証できない状態で、有効期限が切れています。
+			true: 開発者コードがNeeuroサーバーで有効であり、期限が切れていない状態です。
+
 	*/
 
 
