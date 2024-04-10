@@ -1,0 +1,102 @@
+//NSB_Managerの1から103行目
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Events;
+using System.Linq;
+using System;
+using System.Timers;
+
+#if (UNITY_STANDALONE_WIN || UNITY_EDITOR) && NET_4_6 && !UNITY_EDITOR_OSX
+using NSB_SDK_WINDOWS;
+#elif UNITY_ANDROID
+using NSB_SDK_ANDROID;
+#elif UNITY_IOS
+using NSB_SDK_IOS;
+#endif
+
+/// <summary>
+/// Receives EEG data via callbacks from Senzeband framework
+/// </summary>
+public class NSB_Manager : CallbackReceiver
+{
+
+
+	/*
+		NSBM Init
+			- false
+			- true 	- Ready
+
+		Scanning
+			- false - Not scanning
+			- true 	- Scanning
+
+		Connection States
+			- 0 	- Not connected
+			- 1 	- Connecting
+			- 2		- Connected, connectionStatus is updated in DeviceStatus callback
+			- 3		- Connected, SB address is returned in ConnectionSucceed callback
+			- 4		- Connected, MCUID is received
+			Note:
+			iOS devices 0->1->3->4
+			Android devices 0->1->2->3->4
+
+		EEG Started
+			- false
+			- true
+
+		Authenticated
+			- false	- Expired, not able to authenticate Developer code with Neeuro Server
+			- true	- Valid, not expired
+
+	*/
+
+
+	//Developer info to update
+	public string DEVELOPER_CODE = "1111222233334444";  //Replace this string with your developer code. This is used to authenticate with the NEEURO server.
+
+	//Information stored for SB
+	public List<string> listAvailableDevices = new List<string>();  //list of available SB addresses, from scanning
+
+	private bool bIsInitCompleted = false;                          //state, if NSB systems are ready
+	private bool bIsScanning = false;                               //state, if scanning
+	private bool bEegStarted = false;                               //state, if EEG is being transmitted, received
+	private bool bPpgStarted = false;                               //state, if PPG is being transmitted, received
+	private int connectionState = 0;                                //state, on the connection
+	private int prevConnectionState = 0;
+
+	private string addressConnectingSB = string.Empty;                  //holds address of currently connecting SB
+    //private string addressConnectedSB = string.Empty;                   //holds address of currently connected SB
+	private List<string> connectedSBAddresses = new List<string>();
+	private string mcuid = string.Empty;                                //holds the MCUID when available (of connected SB)
+	private string version = string.Empty;
+	private string connectionStatus = string.Empty;                 // "Not connected", "Connecting" or "Connected"  from NSB_BLE.getConnectingString(), getConnectedString(), getNotConnectedString
+	private bool bluetoothStatus = false;                      //holds the OS's bluetooth status,  enabled or disabled
+	private string batteryLevel = string.Empty;                     //holds the battery level
+
+	private float[] mentalStateData = new float[4];
+	private float[] accelerometerData = new float[9];
+	private bool[] channelStatus = new bool[4];
+	private bool goodBTConnection = false;
+	private bool signalReady;
+	private float[,] frequencyBandData = new float[4, 5];
+	private float[] rawEEGData = new float[1000];
+	private float[] filteredEEGData = new float[1000];
+	//private float[] rawEEGData = new float[1000];
+	private float[] eegImpedanceValues = new float[4];
+	private List<int[]> rawPPGData = new List<int[]>();
+	private bool authenticationResult = false;
+	private string authenticationStatus = "";                       //holds the string for authentication status: "200", "No Intenet COnnection" "Invalid"
+	private float[] gammaReading = new float[4]; 
+	private float[] meanReading = new float[4];
+	private float[] fiftysixtyReading = new float[4];   //50 60 Strength
+
+	private string directionData = string.Empty;                  //holds direction of currently connecting SB
+	private float[] calibrationParametersData = new float[3];
+
+	public static NSB_Manager instance = null;
+
+	public SBPanelController sbpanel;
+
+	private int SPO2 = 0;
+	private int heartRate = 0;
